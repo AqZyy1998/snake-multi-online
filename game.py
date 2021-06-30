@@ -4,6 +4,14 @@ import json
 import settings
 from player import Player
 from datatypes import Char, Draw
+import pygame
+import random
+import socket
+import pickle
+import time
+
+import sys
+from PyQt5.QtWidgets import *
 
 
 class Game:
@@ -30,18 +38,24 @@ class Game:
         self.send_all("reset_world")
 
     def new_player(self, name, ws):
+        print("1")
         self._last_id += 1
         player_id = self._last_id
+        print("2")
         self.send_personal(ws, "handshake", name, player_id)
-
+        print("3")
         self.send_personal(ws, "world", self._world)
+        print("4")
         self.send_personal(ws, *self.top_scores_msg())
+        print("5")
         for p in self._players.values():
             if p.alive:
                 self.send_personal(ws, "p_joined", p._id, p.name, p.color, p.score)
-
+        print("6")
         player = Player(player_id, name, ws)
+        print("7")
         self._players[player_id] = player
+        # print("player alive", str(player.alive))
         return player
 
     def join(self, player):
@@ -75,7 +89,6 @@ class Game:
             self.store_top_scores()
         return render
 
-
     def calc_top_scores(self, player):
         if not player.score:
             return
@@ -107,7 +120,6 @@ class Game:
         f = open("top_scores.txt", "w")
         f.write(json.dumps(self._top_scores))
         f.close()
-
 
     def player_disconnected(self, player):
         player.ws = None
@@ -215,9 +227,10 @@ class Game:
             render.append(Draw(posx + i, posy, text[i], color))
         return render
 
-    def send_personal(self, ws, *args):
-        msg = json.dumps([args])
-        ws.send_str(msg)
+    async def send_personal(self, ws, *args):
+        msg = await json.dumps([args])
+        print("msg ", msg)
+        await ws.send_str(msg)
 
     def send_all(self, *args):
         self.send_all_multi([args])

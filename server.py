@@ -5,6 +5,8 @@ from aiohttp import web
 
 import settings
 from game import Game
+import Snake
+
 
 async def handle(request):
     ALLOWED_FILES = ["index.html", "style.css"]
@@ -28,7 +30,7 @@ async def wshandler(request):
     player = None
     while True:
         msg = await ws.receive()
-        if msg.tp == web.MsgType.text:
+        if msg.type == web.WSMsgType.text:
             print("Got message %s" % msg.data)
 
             data = json.loads(msg.data)
@@ -49,7 +51,7 @@ async def wshandler(request):
 
                 game.join(player)
 
-        elif msg.tp == web.MsgType.close:
+        elif msg.type == web.WSMsgType.close:
             break
 
     if player:
@@ -58,6 +60,7 @@ async def wshandler(request):
     print("Closed connection")
     return ws
 
+
 async def game_loop(game):
     game.running = True
     while 1:
@@ -65,7 +68,7 @@ async def game_loop(game):
         if not game.count_alive_players():
             print("Stopping game loop")
             break
-        await asyncio.sleep(1./settings.GAME_SPEED)
+        await asyncio.sleep(1. / settings.GAME_SPEED)
     game.running = False
 
 
